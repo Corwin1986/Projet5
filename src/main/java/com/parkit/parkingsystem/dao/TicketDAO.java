@@ -40,6 +40,29 @@ public class TicketDAO {
         }
     }
 
+
+    public boolean isRecurringVisitor(String vehicleRegNumber) {
+    	boolean recurringVisitor = false;
+        Connection con = null;
+        try {
+            con = dataBaseConfig.getConnection();
+            PreparedStatement ps = con.prepareStatement(DBConstants.GET_RECURRING_VISITOR);
+            //VEHICLE_REG_NUMBER
+            ps.setString(1,vehicleRegNumber);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+            	recurringVisitor = true;
+            }
+            dataBaseConfig.closeResultSet(rs);
+            dataBaseConfig.closePreparedStatement(ps);
+        }catch (Exception ex){
+            logger.error("Error fetching next available slot",ex);
+        }finally {
+            dataBaseConfig.closeConnection(con);
+            return recurringVisitor;
+        }
+    }
+
     public Ticket getTicket(String vehicleRegNumber) {
         Connection con = null;
         Ticket ticket = null;

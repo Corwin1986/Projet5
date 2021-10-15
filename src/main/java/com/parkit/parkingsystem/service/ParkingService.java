@@ -27,7 +27,8 @@ public class ParkingService {
         this.ticketDAO = ticketDAO;
     }
 
-    public void processIncomingVehicle() {
+    public Ticket processIncomingVehicle() {
+    	Ticket generatedTicket = null;
         try{
             ParkingSpot parkingSpot = getNextParkingNumberIfAvailable();
             if(parkingSpot !=null && parkingSpot.getId() > 0){
@@ -44,7 +45,15 @@ public class ParkingService {
                 ticket.setPrice(0);
                 ticket.setInTime(inTime);
                 ticket.setOutTime(null);
+                if (ticketDAO.isRecurringVisitor(vehicleRegNumber)) {
+                	ticket.setRecurring(true);
+                }
                 ticketDAO.saveTicket(ticket);
+                generatedTicket = ticket;
+                
+                if (ticket.isRecurring()) {
+                    System.out.println("Welcome back! As a recurring user of our parking lot, you'll benefit from a 5% discount.");                	
+                }
                 System.out.println("Generated Ticket and saved in DB");
                 System.out.println("Please park your vehicle in spot number:"+parkingSpot.getId());
                 System.out.println("Recorded in-time for vehicle number:"+vehicleRegNumber+" is:"+inTime);
@@ -52,6 +61,7 @@ public class ParkingService {
         }catch(Exception e){
             logger.error("Unable to process incoming vehicle",e);
         }
+        return generatedTicket;
     }
 
     private String getVehichleRegNumber() throws Exception {
@@ -97,10 +107,11 @@ public class ParkingService {
         }
     }
 
-    public void processExitingVehicle() {
+    public Ticket processExitingVehicle() {
+    	Ticket ticket=null;
         try{
             String vehicleRegNumber = getVehichleRegNumber();
-            Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
+            ticket = ticketDAO.getTicket(vehicleRegNumber);
             Date outTime = new Date();
             ticket.setOutTime(outTime);
             fareCalculatorService.calculateFare(ticket);
@@ -115,6 +126,8 @@ public class ParkingService {
             }
         }catch(Exception e){
             logger.error("Unable to process exiting vehicle",e);
+            
         }
+        return ticket;
     }
 }

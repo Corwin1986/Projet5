@@ -123,5 +123,61 @@ public class FareCalculatorServiceTest {
         fareCalculatorService.calculateFare(ticket);
         assertEquals( (24 * Fare.CAR_RATE_PER_HOUR) , ticket.getPrice());
     }
+    
+    @Test
+    public void calculateFareWithLessThanHalfHourParkingTime(){
+        Date inTime = new Date();
+        inTime.setTime( System.currentTimeMillis() - (  30 * 60 * 1000) );//30 minutes or less parking time should be free
+        Date outTime = new Date();
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
 
+        ticket.setInTime(inTime);
+        ticket.setOutTime(outTime);
+        ticket.setParkingSpot(parkingSpot);
+        fareCalculatorService.calculateFare(ticket);
+        assertEquals( 0 , ticket.getPrice()); // should be free so price is zero
+    }
+
+    @Test
+    public void calculateFareWithRecurringCarDiscountParking(){
+    	
+    	// Create ticket with non recurring plate
+        Date inTime = new Date();
+        inTime.setTime( System.currentTimeMillis() - (  60 * 60 * 1000) );
+        Date outTime = new Date();
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
+        ticket.setRecurring(false);
+        ticket.setInTime(inTime);
+        ticket.setOutTime(outTime);
+        ticket.setParkingSpot(parkingSpot);
+        fareCalculatorService.calculateFare(ticket);
+        double nonRecurringPrice = ticket.getPrice();
+        
+    	// create ticket with recurring plate
+    	ticket.setRecurring(true);
+    	fareCalculatorService.calculateFare(ticket);
+
+        assertEquals( nonRecurringPrice * 0.95 , ticket.getPrice()); // should be discounted 5%
+    }
+    @Test
+    public void calculateFareWithRecurringBikeDiscountParking(){
+    	
+    	// Create ticket with non recurring plate
+        Date inTime = new Date();
+        inTime.setTime( System.currentTimeMillis() - (  60 * 60 * 1000) );
+        Date outTime = new Date();
+        ParkingSpot parkingSpot = new ParkingSpot(2, ParkingType.BIKE,false);
+        ticket.setRecurring(false);
+        ticket.setInTime(inTime);
+        ticket.setOutTime(outTime);
+        ticket.setParkingSpot(parkingSpot);
+        fareCalculatorService.calculateFare(ticket);
+        double nonRecurringPrice = ticket.getPrice();
+        
+    	// create ticket with recurring plate
+    	ticket.setRecurring(true);
+    	fareCalculatorService.calculateFare(ticket);
+
+        assertEquals( nonRecurringPrice * 0.95 , ticket.getPrice()); // should be discounted 5%
+    }
 }
